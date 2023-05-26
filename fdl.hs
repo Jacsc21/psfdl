@@ -43,11 +43,34 @@ expandToDepth input rules targetDepth currentDepth
   | currentDepth == targetDepth = input
   | otherwise = expandToDepth (apply input rules) rules targetDepth (currentDepth+1)
 
+expandFractal :: Fractal -> State
+expandFractal fractal = expand state rules depth
+  where
+    state = getState fractal
+    rules = getRules fractal
+    depth = getDepth fractal
+  
 -- convert fractal into sequence of turtle graphics commands
 process :: Fractal -> [Command]
-Fractal State Rules m targetDepth initialLenght
-FractalState = expand ( State Rules targetDepth )
-process = map
+process fractal =
+  let expandedState = expandFractal fractal
+      mapping = getMapping fractal
+  in processHelper mapping expandedState
+
+processHelper :: (Char -> Command) -> State -> [Command]
+processHelper = map
+
+getState :: Fractal -> State
+getState (state, _, _, _, _) = state
+
+getRules :: Fractal -> [Rule]
+getRules (_, rules, _, _, _) = rules
+
+getDepth :: Fractal -> Int
+getDepth (_, _, _, depth, _) = depth
+
+getMapping :: Fractal -> Char -> Command
+getMapping (_, _, mapping, _, _) = mapping
 
 -- helper function to go from two floating point values to a pair of integers
 toPoint :: Double -> Double -> Point
