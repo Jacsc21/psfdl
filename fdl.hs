@@ -25,29 +25,32 @@ fractal2 = ("FX", rules2, let m 'F' = Forward; m 'L' = LeftTurn 90; m 'R' = Righ
 
 -- go from depth n to depth n+1
 apply :: State -> [Rule] -> State
-apply [] _ = []  -- Base case: empty State
-apply (x:xs) rules = applyRule x rules ++ apply xs rules
+apply [] _ = []
+apply (x:xs) [Rule] = applyRule x [Rule] ++ apply xs [Rule]
 
+-- aplies the rules to a single character recursively
 applyRule :: Char -> [Rule] -> State
-applyRule x [] = [x]  -- No more rules to apply, copy the character
-applyRule x (Rule targetCharacter replacement : rules)
+applyRule x [] = [x]  
+applyRule x (Rule targetCharacter replacement : [Rule])
   | x == targetCharacter = replacement
-  | otherwise = applyRule x rules
+  | otherwise = applyRule x [Rule]
 
 -- expand to target depth
 expand :: State -> [Rule] -> Int -> State
-expand input rules int = expandToDepth input rules int n
+expand input rules int = expandToDepth input [Rule] int 0
 
+-- expands from depth n to depth n+1 recursively until it target depth is reached
 expandToDepth :: State -> [Rule] -> Int -> Int -> State
-expandToDepth input rules targetDepth currentDepth
+expandToDepth input [Rule] targetDepth currentDepth
   | currentDepth == targetDepth = input
-  | otherwise = expandToDepth (apply input rules) rules targetDepth (currentDepth+1)
+  | otherwise = expandToDepth (apply input [Rule]) [Rule] targetDepth (currentDepth+1)
 
+-- expands the fractal to the target depth with the expand function
 expandFractal :: Fractal -> State
-expandFractal fractal = expand state rules depth
+expandFractal fractal = expand state [Rule] depth
   where
     state = getState fractal
-    rules = getRules fractal
+    [Rule] = getRule fractal
     depth = getDepth fractal
   
 -- convert fractal into sequence of turtle graphics commands
@@ -57,18 +60,23 @@ process fractal =
       mapping = getMapping fractal
   in processHelper mapping expandedState
 
+-- maps the characters in the target state to the given mappings
 processHelper :: (Char -> Command) -> State -> [Command]
 processHelper = map
 
+-- retrieves the start state of a given fractal
 getState :: Fractal -> State
 getState (state, _, _, _, _) = state
 
-getRules :: Fractal -> [Rule]
-getRules (_, rules, _, _, _) = rules
+-- retrieves the rules of a given fractal
+getRule :: Fractal -> [Rule]
+getRule (_, [Rule], _, _, _) = [Rule]
 
+-- retrieves the target depth of a given fractal
 getDepth :: Fractal -> Int
 getDepth (_, _, _, depth, _) = depth
 
+-- retreives the mapping of a given fractal
 getMapping :: Fractal -> Char -> Command
 getMapping (_, _, mapping, _, _) = mapping
 
@@ -83,7 +91,9 @@ drawIt turtle                (Nop:xs)              = drawIt turtle xs
 drawIt (w, x, y, angle, len) (Forward:xs)          = let
   x' = x+len*(cos angle)
   y' = y-len*(sin angle)
+  pen = createPen Solid 2 0 0 255
   in do
+    withPen pen (line (toPoint x y) (toPoint x' y'))
     drawInWindow w (line (toPoint x y) (toPoint x' y'))
     drawIt (w, x', y', angle, len) xs
 drawIt (w, x, y, angle, len) (Backward:xs)          = let
