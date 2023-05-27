@@ -26,31 +26,31 @@ fractal2 = ("FX", rules2, let m 'F' = Forward; m 'L' = LeftTurn 90; m 'R' = Righ
 -- go from depth n to depth n+1
 apply :: State -> [Rule] -> State
 apply [] _ = []
-apply (x:xs) [Rule] = applyRule x [Rule] ++ apply xs [Rule]
+apply (x:xs) rules = applyRule x rules ++ apply xs rules
 
 -- aplies the rules to a single character recursively
 applyRule :: Char -> [Rule] -> State
 applyRule x [] = [x]  
-applyRule x (Rule targetCharacter replacement : [Rule])
+applyRule x (Rule targetCharacter replacement : rules)
   | x == targetCharacter = replacement
-  | otherwise = applyRule x [Rule]
+  | otherwise = applyRule x rules
 
 -- expand to target depth
 expand :: State -> [Rule] -> Int -> State
-expand input rules int = expandToDepth input [Rule] int 0
+expand input rules int = expandToDepth input rules int 0
 
 -- expands from depth n to depth n+1 recursively until it target depth is reached
 expandToDepth :: State -> [Rule] -> Int -> Int -> State
-expandToDepth input [Rule] targetDepth currentDepth
+expandToDepth input rules targetDepth currentDepth
   | currentDepth == targetDepth = input
-  | otherwise = expandToDepth (apply input [Rule]) [Rule] targetDepth (currentDepth+1)
+  | otherwise = expandToDepth (apply input rules) rules targetDepth (currentDepth+1)
 
 -- expands the fractal to the target depth with the expand function
 expandFractal :: Fractal -> State
-expandFractal fractal = expand state [Rule] depth
+expandFractal fractal = expand state rules depth
   where
     state = getState fractal
-    [Rule] = getRule fractal
+    rules = getRule fractal
     depth = getDepth fractal
   
 -- convert fractal into sequence of turtle graphics commands
@@ -70,7 +70,7 @@ getState (state, _, _, _, _) = state
 
 -- retrieves the rules of a given fractal
 getRule :: Fractal -> [Rule]
-getRule (_, [Rule], _, _, _) = [Rule]
+getRule (_, rules, _, _, _) = rules
 
 -- retrieves the target depth of a given fractal
 getDepth :: Fractal -> Int
