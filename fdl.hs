@@ -91,10 +91,8 @@ drawIt turtle                (Nop:xs)              = drawIt turtle xs
 drawIt (w, x, y, angle, len) (Forward:xs)          = let
   x' = x+len*(cos angle)
   y' = y-len*(sin angle)
-  redGreenBlue = RGB 0.5 0.4 0.6
-  pen = createPen Solid 2 redGreenBlue
   in do
-    drawInWindow w (withRGB redGreenBlue (line (toPoint x y) (toPoint x' y')))
+    drawInWindow w (line (toPoint x y) (toPoint x' y'))
     drawIt (w, x', y', angle, len) xs
 drawIt (w, x, y, angle, len) (Backward:xs)          = let
   x' = x-len*(cos angle)
