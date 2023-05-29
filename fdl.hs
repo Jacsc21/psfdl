@@ -1,4 +1,5 @@
 import Graphics.HGL
+import GHC.IO.Device (RawIO(read))
 
 -- state represented by list of letters
 type State = [Char]
@@ -127,7 +128,7 @@ split (' ':xs)  ys zss = split xs [] (reverse ys:zss)
 split (x:xs)    ys zss = split xs (x : ys) zss
 
 -- interpret the list of lists as a description of initial state, rules, mapping, depth, and length of a fractal
-interpret :: [[String]] -> State -> [Rule] -> (Char -> Command) -> Int -> Double -> RBG -> Float -> Fractal
+interpret :: [[String]] -> State -> [Rule] -> (Char -> Command) -> Int -> Double -> RGB -> Float -> Fractal
 interpret []                   start rules m depth len rgb width = (start, rules, m, depth, len, rgb, width)
 interpret (("rule":xs):yss)    start rules m depth len rgb width = interpret yss start (rules ++ [interpretRule xs]) m depth len rgb width where
   interpretRule (l:"->":rs) = Rule (head l) (foldr (++) [] rs)
@@ -141,14 +142,16 @@ interpret (("cmd":xs):yss)     start rules m depth len rgb width = interpret yss
   interpretCmd [c, "bk"]            m = \x -> if x == (head c) then Backward else m x
 interpret (("length":arg:xs):yss) start rules m depth _ rgb width   = interpret yss start rules m depth (read arg) rgb width 
 interpret (("depth":arg:xs):yss)  start rules m _     len rgb width = interpret yss start rules m (read arg) len rgb width
-interpret (("color":arg:xs):yss)  start rules m depth len _   width = interpret yss start rules m depth len (read arg) width
+interpret (("color":arg:xs):yss)  start rules m depth len _   width = interpret yss start rules m depth len (readRGB arg) width
 interpret (("width":arg:xs):yss)  start rules m depth len rgb _     = interpret yss start rules m depth len rgb (read arg)
 
+readRGB :: int -> int -> int -> RGB
+return RGB (int, int, int) 
 
 -- read from given file and return a fractal
 readFractal fileName = do
   text <- readFile fileName
-  return (interpret (split text [] []) [] [] (\x -> error "unknown command") 0 0)
+  return (interpret (split text [] []) [] [] (\x -> error "unknown command") 0 0 (RGB 0 0 0) 0)
 
 -- daw a fractal described in an .fdl file
 drawFdl fileName = do
